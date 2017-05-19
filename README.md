@@ -49,8 +49,8 @@ you can create as many config.son file as you want.
 The construction have 2 arguments:
 
 - First argument: is the path of the json file (Remember to give the URI) since this is front end you must give the
-URI
-- Second argument: is the path the extra path of to detect your javascript path root
+URI.
+- Second argument: is the path the extra path to detect your javascript root path.
 
 #### For example
 Our host is localhost lets supose our javascript library is in 'js' folder
