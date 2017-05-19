@@ -37,7 +37,7 @@ So our config.json should be something like this:
 }
 ```
 
-you must put the tree as parent root (only in the json file) and add the files that you want to import,
+You must put the key `tree` as parent root (only in the json file) and add the files that you want to import,
 you can create as many config.son file as you want.
 
 ## Use the Autoloader class
