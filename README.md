@@ -63,7 +63,7 @@ Our host is localhost lets supose our javascript library is in 'js' folder
                    * ...
 ```
 
-our js folder is in main folder so our second argurment must be "/"
+our js folder is in main folder so our second argurment must be `/`
 
 ```
 | localhost -
@@ -74,4 +74,4 @@ our js folder is in main folder so our second argurment must be "/"
                                          * class.js
                                          * ...
 ```                                         
-Our js folder is in a sub direcotyr so our second argurment must be "/folder1/folder2/"
+Our js folder is in a sub direcotyr so our second argurment must be `/folder1/folder2/`
