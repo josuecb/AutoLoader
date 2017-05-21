@@ -91,6 +91,7 @@ var AutoLoader = (function () {
     function AutoLoader(ConfigURI, extraPath) {
         var s = this;
         var qLink = new Queue();
+        var loaded = false;
 
         this.configURI = ConfigURI + "?" + Date.parse("" + new Date());
         if (window.location.hostname !== "localhost")
@@ -149,18 +150,19 @@ var AutoLoader = (function () {
                     if (allowToDownload) {
                         s.download(qLink.remove());
                         allowToDownload = false;
-                        if (!qLink.empty())
-                            s.import(debug);
-                    } else {
+                    } else
                         clearTimeout(this);
-                        if (!qLink.empty())
-                            s.import(debug);
-                    }
+
+                    if (!qLink.empty())
+                        s.import(debug);
+                    else
+                        loaded = true;
                 }, 1);
             }
 
             evl.bind('scriptLoader', function (args) {
                 allowToDownload = args;
+                evl.call('onDownloadFinished', loaded);
             });
         };
 
@@ -172,6 +174,16 @@ var AutoLoader = (function () {
             e.setAttribute("src", l);
             e.setAttribute("onload", "evl.call('scriptLoader',true);");
             document.getElementsByTagName("body")[0].appendChild(e);
+        };
+
+        this.onload = function (callback) {
+            evl.bind('onDownloadFinished', function (args) {
+                if (args){
+                    // avoids from loading many times
+                    loaded = false;
+                    callback();
+                }
+            });
         }
     }
 
