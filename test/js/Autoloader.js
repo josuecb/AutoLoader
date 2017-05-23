@@ -100,9 +100,6 @@ var AutoLoader = (function () {
             this.hostname = "";
 
         this.hostname += (extraPath !== undefined ? extraPath : "");
-
-
-        this.hostname += "/";
         this.tree = null;
 
         var xmlHttp = new XMLHttpRequest();
@@ -127,13 +124,7 @@ var AutoLoader = (function () {
             for (var dirs in t) {
                 if (t instanceof Array) {
                     for (var i = 0; i < t.length; i++) {
-                        var l;
-
-                        if (dir[dir.length - 1] === "/")
-                            l = s.hostname + dir + t[i] + ".js?" + Date.parse("" + new Date());
-                        else
-                            l = s.hostname + dir + "/" + t[i] + ".js?" + Date.parse("" + new Date());
-
+                        var l = s.hostname + dir + ((dir[dir.length - 1] === "/") ? "" : "/") + t[i] + ".js?" + Date.parse("" + new Date());
                         qLink.insert(l);
                         if (debug)
                             console.log("Added to queue: " + l);
@@ -141,57 +132,61 @@ var AutoLoader = (function () {
 
                     return;
                 } else if (t instanceof Object) {
-                    if (dir !== undefined)
-                        this.load(debug, dir + "/" + dirs, t[dirs]);
-                    else
-                        this.load(debug, dirs, t[dirs]);
+                    this.load(debug, ((dir === undefined) ? (s.hostname[s.hostname.length - 1] === "/") ? "" : ("/") : dir + "/") + dirs, t[dirs]);
                 }
             }
 
         };
 
         this.import = function (debug) {
-            var allowToDownload = true;
-            if (debug) {
-                setTimeout(function () {
-                    if (allowToDownload) {
-                        s.download(qLink.remove());
-                        allowToDownload = false;
-                    } else
-                        clearTimeout(this);
-
-                    if (!qLink.empty())
-                        s.import(debug);
-                    else
-                        loaded = true;
-                }, 10);
-            }
+            if (!qLink.empty())
+                s.download(qLink.remove(), debug);
 
             evl.bind('scriptLoader', function (args) {
-                allowToDownload = args;
-                evl.call('onDownloadFinished', loaded);
+                if (!qLink.empty())
+                    s.download(qLink.remove(), debug);
             });
         };
 
-        this.download = function (l, debug) {
-            if (debug)
-                console.log("Added: " + l);
 
-            var e = document.createElement("script");
-            e.setAttribute("src", l);
-            e.setAttribute("onload", "evl.call('scriptLoader',true);");
-            document.getElementsByTagName("body")[0].appendChild(e);
-        };
+        this.download = function (path, debug) {
+            var done = false;
+            var scr = document.createElement('script');
 
-        this.onload = function (callback) {
-            evl.bind('onDownloadFinished', function (args) {
-                if (args) {
-                    // avoids from loading many times
-                    loaded = false;
-                    callback();
+            scr.onload = handleLoad;
+            scr.onreadystatechange = handleReadyStateChange;
+            scr.onerror = handleError;
+            scr.src = path;
+            document.body.appendChild(scr);
+
+            function handleLoad() {
+                if (!done) {
+                    done = true;
+                    if (debug)
+                        console.log("ok: " + path);
+                    evl.call('scriptLoader', true);
                 }
-            });
-        }
+            }
+
+            function handleReadyStateChange() {
+                var state;
+
+                if (!done) {
+                    state = scr.readyState;
+                    if (state === "complete") {
+                        handleLoad();
+                    }
+                }
+            }
+
+            function handleError() {
+                if (!done) {
+                    done = true;
+                    if (debug)
+                        console.log("error" + path);
+                }
+            }
+        };
     }
 
 
