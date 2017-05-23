@@ -107,6 +107,7 @@ var AutoLoader = (function () {
 
         var xmlHttp = new XMLHttpRequest();
         xmlHttp.open("GET", this.configURI, false);
+
         xmlHttp.onreadystatechange = function () {
             if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
                 s.tree = JSON.parse(xmlHttp.responseText).tree;
@@ -117,7 +118,7 @@ var AutoLoader = (function () {
 
         xmlHttp.send();
 
-        this.load = function (dir, tree, debug) {
+        this.load = function (debug, dir, tree) {
             var t = this.tree;
 
             if (tree !== undefined)
@@ -126,7 +127,13 @@ var AutoLoader = (function () {
             for (var dirs in t) {
                 if (t instanceof Array) {
                     for (var i = 0; i < t.length; i++) {
-                        var l = s.hostname + dir + "/" + t[i] + ".js?" + Date.parse("" + new Date());
+                        var l;
+
+                        if (dir[dir.length - 1] === "/")
+                            l = s.hostname + dir + t[i] + ".js?" + Date.parse("" + new Date());
+                        else
+                            l = s.hostname + dir + "/" + t[i] + ".js?" + Date.parse("" + new Date());
+
                         qLink.insert(l);
                         if (debug)
                             console.log("Added to queue: " + l);
@@ -135,9 +142,9 @@ var AutoLoader = (function () {
                     return;
                 } else if (t instanceof Object) {
                     if (dir !== undefined)
-                        this.load(dir + "/" + dirs, t[dirs], debug);
+                        this.load(debug, dir + "/" + dirs, t[dirs]);
                     else
-                        this.load(dirs, t[dirs], debug);
+                        this.load(debug, dirs, t[dirs]);
                 }
             }
 
@@ -157,7 +164,7 @@ var AutoLoader = (function () {
                         s.import(debug);
                     else
                         loaded = true;
-                }, 1);
+                }, 10);
             }
 
             evl.bind('scriptLoader', function (args) {
@@ -178,7 +185,7 @@ var AutoLoader = (function () {
 
         this.onload = function (callback) {
             evl.bind('onDownloadFinished', function (args) {
-                if (args){
+                if (args) {
                     // avoids from loading many times
                     loaded = false;
                     callback();
